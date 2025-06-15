@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>허그핏스타점핑 - 고객 관리(관리자)</title>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f7f9fa; color: #222; }
+        .container { max-width: 1200px; margin: 30px auto; padding: 24px 32px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);}
+        .header { display: flex; align-items: center; margin-bottom: 24px; }
+        .header img { width: 120px; margin-right: 18px; }
+        .header h2 { color: #2e7d32; font-size: 22px; margin: 0; }
+        .search-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+        .search-row label { font-weight: 500; }
+        .search-row input[type="text"] { padding: 7px 12px; border: 1px solid #bbb; border-radius: 4px; font-size: 15px; width: 180px; }
+        .search-row button { background: #29b6f6; color: #fff; border: none; border-radius: 4px; padding: 7px 18px; font-size: 15px; font-weight: 600; cursor: pointer; }
+        .option-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+        .option-row label { font-weight: 500; }
+        .option-row select, .option-row input[type="number"] { padding: 7px 10px; border: 1px solid #bbb; border-radius: 4px; font-size: 15px; }
+        .option-row button { font-size: 15px; font-weight: 600; border: none; border-radius: 4px; padding: 7px 16px; margin-right: 4px; cursor: pointer; }
+        .btn-blue { background: #29b6f6; color: #fff; }
+        .btn-green { background: #43a047; color: #fff; }
+        .btn-outline { background: #fff; color: #222; border: 1px solid #bbb; }
+        table { width: 100%; border-collapse: collapse; margin-top: 18px; background: #fafbfc; }
+        th, td { border: 1px solid #e0e0e0; padding: 10px 8px; text-align: center; font-size: 15px; }
+        th { background: #f2f3f5; font-weight: 700; }
+        .action-btn { background: #fff; color: #1976d2; border: 1px solid #1976d2; border-radius: 4px; padding: 4px 10px; font-size: 14px; cursor: pointer; margin: 0 2px; }
+        .success-message { display: none; text-align: center; color: #4CAF50; margin-top: 18px; padding: 10px; background-color: #e8f5e9; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="logo.png" alt="허그핏 로고">
+            <h2>고객 관리 (관리자용)</h2>
+        </div>
+        <div class="search-row">
+            <label for="searchName">고객 이름 검색:</label>
+            <input type="text" id="searchName" placeholder="예: 김민정">
+            <button type="button" onclick="searchCustomer()">검색</button>
+        </div>
+        <div class="option-row">
+            <label for="regType">등록 유형:</label>
+            <select id="regType">
+                <option value="쿠폰">쿠폰</option>
+                <option value="기간">기간</option>
+            </select>
+            <select id="couponOption">
+                <option value="한달 10회">한달 10회</option>
+                <option value="30회 3개월">30회 3개월</option>
+                <option value="custom">직접입력</option>
+            </select>
+            <select id="periodOption" style="display:none;">
+                <option value="1개월">1개월</option>
+                <option value="3개월">3개월</option>
+                <option value="6개월">6개월</option>
+                <option value="custom">직접입력</option>
+            </select>
+            <input type="number" id="customInput" style="display:none; width:70px;" min="1" placeholder="입력">
+            <button class="btn-blue" type="button" onclick="registerCustomer()">고객 등록</button>
+            <button class="btn-green" type="button" onclick="loadCustomers()">전체 회원 조회</button>
+        </div>
+        <div id="successMessage" class="success-message">고객이 성공적으로 등록되었습니다!</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>고객명</th>
+                    <th>전화번호뒷자리</th>
+                    <th>등록일자</th>
+                    <th>유형</th>
+                    <th>옵션</th>
+                    <th>남은횟수/기간</th>
+                    <th>최근방문일</th>
+                    <th>상태</th>
+                </tr>
+            </thead>
+            <tbody id="customerTableBody">
+                <!-- 고객 데이터가 여기에 표시됩니다 -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbxeNUrADOJZjxlSBZda0eZjv0J-OOjlWKL3KPfi33VTWtFH0HAW1MF9cCmAB26t0qeD/exec";
+        // 등록유형에 따라 옵션 드롭다운 표시 변경
+        const regType = document.getElementById('regType');
+        const couponOption = document.getElementById('couponOption');
+        const periodOption = document.getElementById('periodOption');
+        const customInput = document.getElementById('customInput');
+        regType.addEventListener('change', function() {
+            if (this.value === '쿠폰') {
+                couponOption.style.display = '';
+                periodOption.style.display = 'none';
+                customInput.style.display = couponOption.value === 'custom' ? '' : 'none';
+            } else {
+                couponOption.style.display = 'none';
+                periodOption.style.display = '';
+                customInput.style.display = periodOption.value === 'custom' ? '' : 'none';
+            }
+        });
+        couponOption.addEventListener('change', function() {
+            customInput.style.display = this.value === 'custom' ? '' : 'none';
+        });
+        periodOption.addEventListener('change', function() {
+            customInput.style.display = this.value === 'custom' ? '' : 'none';
+        });
+
+        // 고객 등록
+        async function registerCustomer() {
+            const name = prompt('고객 이름을 입력하세요');
+            if (!name) return;
+            const phone = prompt('전화번호 뒷자리 4자리를 입력하세요');
+            if (!phone || phone.length !== 4) return alert('전화번호 뒷자리 4자리를 입력하세요.');
+            const regDate = new Date().toISOString().slice(0,10);
+            let type = regType.value;
+            let option = '';
+            let remain = '';
+            if (type === '쿠폰') {
+                option = couponOption.value === 'custom' ? customInput.value + '회' : couponOption.value;
+                remain = parseInt(customInput.value) || (couponOption.value === '한달 10회' ? 10 : 30);
+            } else {
+                option = periodOption.value === 'custom' ? customInput.value + '개월' : periodOption.value;
+                remain = parseInt(customInput.value) || (periodOption.value === '1개월' ? 1 : periodOption.value === '3개월' ? 3 : 6);
+            }
+            const data = { name, phone, regDate, type, option, remain };
+            await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            document.getElementById('successMessage').style.display = 'block';
+            setTimeout(() => { document.getElementById('successMessage').style.display = 'none'; }, 2000);
+            loadCustomers();
+        }
+
+        // 전체 고객 조회
+        async function loadCustomers() {
+            const res = await fetch(API_URL);
+            const customers = await res.json();
+            const tbody = document.getElementById('customerTableBody');
+            tbody.innerHTML = '';
+            customers.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${c['이름']}</td>
+                    <td>${c['전화번호뒷자리']}</td>
+                    <td>${c['등록일']}</td>
+                    <td>${c['유형']}</td>
+                    <td>${c['옵션']}</td>
+                    <td>${c['남은횟수/기간']}</td>
+                    <td>${c['최근방문일']}</td>
+                    <td>${c['상태']}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 고객 이름 검색
+        async function searchCustomer() {
+            const keyword = document.getElementById('searchName').value.trim();
+            const res = await fetch(API_URL);
+            const customers = await res.json();
+            const tbody = document.getElementById('customerTableBody');
+            tbody.innerHTML = '';
+            customers.filter(c => c['이름'].includes(keyword)).forEach(c => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${c['이름']}</td>
+                    <td>${c['전화번호뒷자리']}</td>
+                    <td>${c['등록일']}</td>
+                    <td>${c['유형']}</td>
+                    <td>${c['옵션']}</td>
+                    <td>${c['남은횟수/기간']}</td>
+                    <td>${c['최근방문일']}</td>
+                    <td>${c['상태']}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 페이지 로드시 전체 고객 조회
+        window.onload = loadCustomers;
+    </script>
+</body>
+</html>
