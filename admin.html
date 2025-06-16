@@ -69,6 +69,7 @@
         <table>
             <thead>
                 <tr>
+<th>삭제</th>
                     <th>이름</th>
                     <th>전화번호뒷자리</th>
                     <th>등록일</th>
@@ -125,6 +126,33 @@ startDateGroup.style.display = '';
             const json = await res.json();
             return json.records.map(r => r.fields);
         }
+
+async function deleteCustomer(name, phone) {
+    if (!confirm(`${name} 고객을 정말 삭제하시겠습니까?`)) return;
+    // 1. 고객 전체 데이터(레코드ID 포함) 조회
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
+    const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
+    });
+    const json = await res.json();
+    const found = json.records.find(r => r.fields['이름'] === name && r.fields['전화번호뒷자리'] === phone);
+    if (!found) {
+        alert('고객을 찾을 수 없습니다.');
+        return;
+    }
+    // 2. 삭제 요청
+    const delUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}/${found.id}`;
+    const delRes = await fetch(delUrl, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
+    });
+    if (!delRes.ok) {
+        alert('삭제에 실패했습니다.');
+        return;
+    }
+    alert('삭제되었습니다.');
+    loadCustomers();
+}
 
         async function registerCustomer() {
             const name = prompt('고객 이름을 입력하세요');
@@ -194,7 +222,9 @@ if (type === '기간' && !startDate) { // ★ 추가
                     <td>${c['남은횟수/기간'] || ''}</td>
                     <td>${c['최근방문일'] || ''}</td>
                     <td>${c['상태'] || ''}</td>
-
+<td>
+    <button class="action-btn" onclick="deleteCustomer('${c['이름']}', '${c['전화번호뒷자리']}')">삭제</button>
+  </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -211,11 +241,13 @@ if (type === '기간' && !startDate) { // ★ 추가
                     <td>${c['이름'] || ''}</td>
                     <td>${c['전화번호뒷자리'] || ''}</td>
                     <td>${c['등록일'] || ''}</td>
+  <td>${c['기간시작일'] || ''}</td> 
                     <td>${c['유형'] || ''}</td>
                     <td>${c['옵션'] || ''}</td>
                     <td>${c['남은횟수/기간'] || ''}</td>
                     <td>${c['최근방문일'] || ''}</td>
                     <td>${c['상태'] || ''}</td>
+<td><button class="action-btn" onclick="deleteCustomer('${c['이름']}', '${c['전화번호뒷자리']}')">삭제</button></td>
                 `;
                 tbody.appendChild(tr);
             });
