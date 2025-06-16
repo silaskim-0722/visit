@@ -202,7 +202,65 @@
             });
         }
 
+document.getElementById('attendanceForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+
+    // 1. 고객 전체 데이터(레코드ID 포함) 조회
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
+    const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
+    });
+    const json = await res.json();
+    const records = json.records;
+
+    // 2. 입력값과 일치하는 고객 찾기
+    const found = records.find(r => r.fields['이름'] === name && r.fields['전화번호뒷자리'] === phone);
+
+    if (found) {
+        // 3. 남은횟수/기간 차감, 최근방문일 업데이트
+        const remain = found.fields['남은횟수/기간'] || 0;
+        const today = new Date().toISOString().slice(0,10);
+        const patchUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}/${found.id}`;
+        const patchRes = await fetch(patchUrl, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                fields: {
+                    '남은횟수/기간': remain > 0 ? remain - 1 : 0,
+                    '최근방문일': today
+                }
+            })
+        });
+        if (!patchRes.ok) {
+            const error = await patchRes.json();
+            alert('에러: ' + JSON.stringify(error));
+            return;
+        }
+        document.getElementById('successMessage').style.display = 'block';
+        document.getElementById('failMessage').style.display = 'none';
+        this.reset();
+        setTimeout(() => {
+            document.getElementById('successMessage').style.display = 'none';
+        }, 3000);
+    } else {
+        document.getElementById('failMessage').style.display = 'block';
+        document.getElementById('successMessage').style.display = 'none';
+        setTimeout(() => {
+            document.getElementById('failMessage').style.display = 'none';
+        }, 3000);
+    }
+});
+
         window.onload = loadCustomers;
-    </script>
+   
+
+ </script>
+
+
 </body>
 </html>
