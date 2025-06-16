@@ -43,7 +43,7 @@
             <button style="width:100%; background:#ffe500; color:#222; font-size:16px; font-weight:700; border:none; border-radius:30px; padding:14px 0; margin-top:10px; box-shadow:0 2px 8px rgba(0,0,0,0.07); cursor:pointer;">카카오톡 문의하기</button>
         </a>
     </div>
-    <script>
+        <script>
         const AIRTABLE_API_KEY = 'patTSoOXQOfJ6DOey.18e6b1a1d9db8dc5a91e7e97cdcb94ea5968bfdf8cf6d4bda6b9f484608991fd';
         const AIRTABLE_BASE_ID = 'appfWwXzA5OfPaeHI';
         const AIRTABLE_TABLE_NAME = '고객';
@@ -55,6 +55,7 @@
         const dd = String(today.getDate()).padStart(2, '0');
         document.getElementById('today').textContent = `오늘 날짜: ${yyyy}-${mm}-${dd}`;
 
+        // 고객 목록 가져오기 (id 포함)
         async function getCustomersAirtable() {
             const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
             const res = await fetch(url, {
@@ -63,7 +64,28 @@
                 }
             });
             const json = await res.json();
-            return json.records.map(r => r.fields);
+            // id도 함께 반환
+            return json.records.map(r => ({ id: r.id, ...r.fields }));
+        }
+
+        // 출석체크(쿠폰 차감 및 최근방문일 업데이트)
+        async function updateAttendance(recordId, newCount, todayStr) {
+            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}/${recordId}`;
+            const data = {
+                fields: {
+                    "남은횟수/기간": newCount,
+                    "최근방문일": todayStr
+                }
+            };
+            const response = await fetch(url, {
+                method: "PATCH",
+                headers: {
+                    "Authorization": `Bearer ${AIRTABLE_API_KEY}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+            return response.json();
         }
 
         document.getElementById('attendanceForm').addEventListener('submit', async function(e) {
@@ -72,7 +94,16 @@
             const phone = document.getElementById('phone').value.trim();
             const customers = await getCustomersAirtable();
             const found = customers.find(c => c['이름'] === name && c['전화번호뒷자리'] === phone);
+
             if (found) {
+                const remain = found['남은횟수/기간'] || 0;
+                const todayStr = new Date().toISOString().slice(0, 10);
+                if (remain > 0) {
+                    await updateAttendance(found.id, remain - 1, todayStr);
+                    document.getElementById('successMessage').textContent = `출석체크가 완료되었습니다! 남은 쿠폰: ${remain - 1}`;
+                } else {
+                    document.getElementById('successMessage').textContent = `쿠폰이 모두 소진되었습니다. 관리자에게 문의하세요.`;
+                }
                 document.getElementById('successMessage').style.display = 'block';
                 document.getElementById('failMessage').style.display = 'none';
                 this.reset();
