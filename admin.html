@@ -142,6 +142,7 @@ startDateGroup.style.display = '';
                 option = periodOption.value === 'custom' ? customInput.value + '개월' : periodOption.value;
                 remain = parseInt(customInput.value) || (periodOption.value === '1개월' ? 1 : periodOption.value === '3개월' ? 3 : 6);
             }
+const startDate = document.getElementById('startDate').value;
             const data = {
                 이름: name,
                 전화번호뒷자리: phone,
@@ -149,7 +150,8 @@ startDateGroup.style.display = '';
                 유형: type,
                 옵션: option,
                 '남은횟수/기간': remain,
-                상태: '정상'
+                상태: '정상',
+"기간시작일": startDate
             };
             const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
             const res = await fetch(url, {
