@@ -64,9 +64,9 @@
         <table>
             <thead>
                 <tr>
-                    <th>고객명</th>
+                    <th>이름</th>
                     <th>전화번호뒷자리</th>
-                    <th>등록일자</th>
+                    <th>등록일</th>
                     <th>유형</th>
                     <th>옵션</th>
                     <th>남은횟수/기간</th>
@@ -80,8 +80,10 @@
         </table>
     </div>
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxeNUrADOJZjxlSBZda0eZjv0J-OOjlWKL3KPfi33VTWtFH0HAW1MF9cCmAB26t0qeD/exec";
-        // 등록유형에 따라 옵션 드롭다운 표시 변경
+        const AIRTABLE_API_KEY = 'patTSoOXQOfJ6DOey.18e6b1a1d9db8dc5a91e7e97cdcb94ea5968bfdf8cf6d4bda6b9f484608991fd';
+        const AIRTABLE_BASE_ID = 'appfWwXzA5OfPaeHI';
+        const AIRTABLE_TABLE_NAME = '고객';
+
         const regType = document.getElementById('regType');
         const couponOption = document.getElementById('couponOption');
         const periodOption = document.getElementById('periodOption');
@@ -104,7 +106,17 @@
             customInput.style.display = this.value === 'custom' ? '' : 'none';
         });
 
-        // 고객 등록
+        async function getCustomersAirtable() {
+            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
+            const res = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${AIRTABLE_API_KEY}`
+                }
+            });
+            const json = await res.json();
+            return json.records.map(r => r.fields);
+        }
+
         async function registerCustomer() {
             const name = prompt('고객 이름을 입력하세요');
             if (!name) return;
@@ -121,63 +133,62 @@
                 option = periodOption.value === 'custom' ? customInput.value + '개월' : periodOption.value;
                 remain = parseInt(customInput.value) || (periodOption.value === '1개월' ? 1 : periodOption.value === '3개월' ? 3 : 6);
             }
-            const data = { name, phone, regDate, type, option, remain };
-            await fetch(API_URL, {
+            const data = { 이름: name, 전화번호뒷자리: phone, 등록일: regDate, 유형: type, 옵션: option, '남은횟수/기간': remain, 상태: '정상' };
+            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
+            await fetch(url, {
                 method: 'POST',
-                body: JSON.stringify(data),
-                headers: { 'Content-Type': 'application/json' }
+                headers: {
+                    'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ fields: data })
             });
             document.getElementById('successMessage').style.display = 'block';
             setTimeout(() => { document.getElementById('successMessage').style.display = 'none'; }, 2000);
             loadCustomers();
         }
 
-        // 전체 고객 조회
         async function loadCustomers() {
-            const res = await fetch(API_URL);
-            const customers = await res.json();
+            const customers = await getCustomersAirtable();
             const tbody = document.getElementById('customerTableBody');
             tbody.innerHTML = '';
             customers.forEach(c => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${c['이름']}</td>
-                    <td>${c['전화번호뒷자리']}</td>
-                    <td>${c['등록일']}</td>
-                    <td>${c['유형']}</td>
-                    <td>${c['옵션']}</td>
-                    <td>${c['남은횟수/기간']}</td>
-                    <td>${c['최근방문일']}</td>
-                    <td>${c['상태']}</td>
+                    <td>${c['이름'] || ''}</td>
+                    <td>${c['전화번호뒷자리'] || ''}</td>
+                    <td>${c['등록일'] || ''}</td>
+                    <td>${c['유형'] || ''}</td>
+                    <td>${c['옵션'] || ''}</td>
+                    <td>${c['남은횟수/기간'] || ''}</td>
+                    <td>${c['최근방문일'] || ''}</td>
+                    <td>${c['상태'] || ''}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // 고객 이름 검색
         async function searchCustomer() {
             const keyword = document.getElementById('searchName').value.trim();
-            const res = await fetch(API_URL);
-            const customers = await res.json();
+            const customers = await getCustomersAirtable();
             const tbody = document.getElementById('customerTableBody');
             tbody.innerHTML = '';
-            customers.filter(c => c['이름'].includes(keyword)).forEach(c => {
+            customers.filter(c => c['이름'] && c['이름'].includes(keyword)).forEach(c => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${c['이름']}</td>
-                    <td>${c['전화번호뒷자리']}</td>
-                    <td>${c['등록일']}</td>
-                    <td>${c['유형']}</td>
-                    <td>${c['옵션']}</td>
-                    <td>${c['남은횟수/기간']}</td>
-                    <td>${c['최근방문일']}</td>
-                    <td>${c['상태']}</td>
+                    <td>${c['이름'] || ''}</td>
+                    <td>${c['전화번호뒷자리'] || ''}</td>
+                    <td>${c['등록일'] || ''}</td>
+                    <td>${c['유형'] || ''}</td>
+                    <td>${c['옵션'] || ''}</td>
+                    <td>${c['남은횟수/기간'] || ''}</td>
+                    <td>${c['최근방문일'] || ''}</td>
+                    <td>${c['상태'] || ''}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // 페이지 로드시 전체 고객 조회
         window.onload = loadCustomers;
     </script>
 </body>

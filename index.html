@@ -44,7 +44,10 @@
         </a>
     </div>
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxeNUrADOJZjxlSBZda0eZjv0J-OOjlWKL3KPfi33VTWtFH0HAW1MF9cCmAB26t0qeD/exec";
+        const AIRTABLE_API_KEY = 'patTSoOXQOfJ6DOey.18e6b1a1d9db8dc5a91e7e97cdcb94ea5968bfdf8cf6d4bda6b9f484608991fd';
+        const AIRTABLE_BASE_ID = 'appfWwXzA5OfPaeHI';
+        const AIRTABLE_TABLE_NAME = '고객';
+
         // 오늘 날짜 표시
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -52,12 +55,22 @@
         const dd = String(today.getDate()).padStart(2, '0');
         document.getElementById('today').textContent = `오늘 날짜: ${yyyy}-${mm}-${dd}`;
 
+        async function getCustomersAirtable() {
+            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
+            const res = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${AIRTABLE_API_KEY}`
+                }
+            });
+            const json = await res.json();
+            return json.records.map(r => r.fields);
+        }
+
         document.getElementById('attendanceForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const name = document.getElementById('name').value.trim();
             const phone = document.getElementById('phone').value.trim();
-            const res = await fetch(API_URL);
-            const customers = await res.json();
+            const customers = await getCustomersAirtable();
             const found = customers.find(c => c['이름'] === name && c['전화번호뒷자리'] === phone);
             if (found) {
                 document.getElementById('successMessage').style.display = 'block';
