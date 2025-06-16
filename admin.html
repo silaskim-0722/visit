@@ -144,6 +144,11 @@ startDateGroup.style.display = '';
             }
 const startDate = document.getElementById('startDate').value;
 console.log('기간시작일:', startDate);
+
+if (type === '기간' && !startDate) { // ★ 추가
+    alert('기간시작일을 반드시 선택하세요!');
+    return;
+}
             const data = {
                 이름: name,
                 전화번호뒷자리: phone,
