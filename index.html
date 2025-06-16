@@ -95,29 +95,53 @@
             const customers = await getCustomersAirtable();
             const found = customers.find(c => c['이름'] === name && c['전화번호뒷자리'] === phone);
 
-            if (found) {
-                const remain = found['남은횟수/기간'] || 0;
-                const todayStr = new Date().toISOString().slice(0, 10);
-                if (remain > 0) {
-                    await updateAttendance(found.id, remain - 1, todayStr);
-                    document.getElementById('successMessage').textContent = `출석체크가 완료되었습니다! 남은 쿠폰: ${remain - 1}`;
-                } else {
-                    document.getElementById('successMessage').textContent = `쿠폰이 모두 소진되었습니다. 관리자에게 문의하세요.`;
-                }
-                document.getElementById('successMessage').style.display = 'block';
-                document.getElementById('failMessage').style.display = 'none';
-                this.reset();
-                setTimeout(() => {
-                    document.getElementById('successMessage').style.display = 'none';
-                }, 3000);
-            } else {
-                document.getElementById('failMessage').style.display = 'block';
-                document.getElementById('successMessage').style.display = 'none';
-                setTimeout(() => {
-                    document.getElementById('failMessage').style.display = 'none';
-                }, 3000);
-            }
+           if (found) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (found['유형'] === '쿠폰') {
+        const remain = found['남은횟수/기간'] || 0;
+        if (remain > 0) {
+            await updateAttendance(found.id, remain - 1, todayStr);
+            document.getElementById('successMessage').textContent = `출석체크가 완료되었습니다! 남은 쿠폰: ${remain - 1}`;
+        } else {
+            document.getElementById('successMessage').textContent = `쿠폰이 모두 소진되었습니다. 관리자에게 문의하세요.`;
+        }
+    } else if (found['유형'] === '기간') {
+        // 기간권: 만료일 계산
+        const startDateStr = found['기간시작일'];
+        const option = found['옵션']; // 예: "1개월", "3개월"
+        if (startDateStr && option) {
+            const months = getMonthsFromOption(option);
+            const startDate = new Date(startDateStr);
+            const expireDate = new Date(startDate);
+            expireDate.setMonth(expireDate.getMonth() + months);
+            const expireStr = expireDate.toISOString().slice(0, 10);
+            // 최근방문일만 업데이트
+            await updateAttendance(found.id, 0, todayStr);
+            document.getElementById('successMessage').textContent = `출석체크 완료! 만료일: ${expireStr}`;
+        } else {
+            document.getElementById('successMessage').textContent = `기간권 정보가 올바르지 않습니다. 관리자에게 문의하세요.`;
+        }
+    }
+    document.getElementById('successMessage').style.display = 'block';
+    document.getElementById('failMessage').style.display = 'none';
+    this.reset();
+    setTimeout(() => {
+        document.getElementById('successMessage').style.display = 'none';
+    }, 3000);
+} else {
+    document.getElementById('failMessage').style.display = 'block';
+    document.getElementById('successMessage').style.display = 'none';
+    setTimeout(() => {
+        document.getElementById('failMessage').style.display = 'none';
+    }, 3000);
+}
         });
+function getMonthsFromOption(option) {
+    if (!option) return 1;
+    const match = option.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 1;
+}
+
     </script>
 </body>
 </html>
