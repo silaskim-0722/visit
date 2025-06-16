@@ -143,6 +143,7 @@ startDateGroup.style.display = '';
                 remain = parseInt(customInput.value) || (periodOption.value === '1개월' ? 1 : periodOption.value === '3개월' ? 3 : 6);
             }
 const startDate = document.getElementById('startDate').value;
+console.log('기간시작일:', startDate);
             const data = {
                 이름: name,
                 전화번호뒷자리: phone,
