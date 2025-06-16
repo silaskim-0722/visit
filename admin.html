@@ -125,7 +125,7 @@
             const regDate = new Date().toISOString().slice(0,10);
             let type = regType.value;
             let option = '';
-            let remain = '';
+            let remain = 0;
             if (type === '쿠폰') {
                 option = couponOption.value === 'custom' ? customInput.value + '회' : couponOption.value;
                 remain = parseInt(customInput.value) || (couponOption.value === '한달 10회' ? 10 : 30);
@@ -133,9 +133,17 @@
                 option = periodOption.value === 'custom' ? customInput.value + '개월' : periodOption.value;
                 remain = parseInt(customInput.value) || (periodOption.value === '1개월' ? 1 : periodOption.value === '3개월' ? 3 : 6);
             }
-            const data = { 이름: name, 전화번호뒷자리: phone, 등록일: regDate, 유형: type, 옵션: option, '남은횟수/기간': remain, 상태: '정상' };
+            const data = {
+                이름: name,
+                전화번호뒷자리: phone,
+                등록일: regDate,
+                유형: type,
+                옵션: option,
+                '남은횟수/기간': remain,
+                상태: '정상'
+            };
             const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
-            await fetch(url, {
+            const res = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
@@ -143,6 +151,11 @@
                 },
                 body: JSON.stringify({ fields: data })
             });
+            if (!res.ok) {
+                const error = await res.json();
+                alert('에러: ' + JSON.stringify(error));
+                return;
+            }
             document.getElementById('successMessage').style.display = 'block';
             setTimeout(() => { document.getElementById('successMessage').style.display = 'none'; }, 2000);
             loadCustomers();
