@@ -26,6 +26,11 @@
         th { background: #f2f3f5; font-weight: 700; }
         .action-btn { background: #fff; color: #1976d2; border: 1px solid #1976d2; border-radius: 4px; padding: 4px 10px; font-size: 14px; cursor: pointer; margin: 0 2px; }
         .success-message { display: none; text-align: center; color: #4CAF50; margin-top: 18px; padding: 10px; background-color: #e8f5e9; border-radius: 5px; }
+        #editModal { display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:1000; align-items:center; justify-content:center; }
+        #editModal .modal-content { background:#fff; padding:24px; border-radius:8px; min-width:320px; max-width:90vw; }
+        #editModal label { display:block; margin:8px 0 4px; }
+        #editModal input, #editModal select { width:100%; padding:6px; margin-bottom:8px; }
+        #editModal button { margin-right:8px; }
     </style>
 </head>
 <body>
@@ -72,6 +77,7 @@
                     <th>전화번호뒷자리</th>
                     <th>등록일</th>
                     <th>기간시작일</th>
+                    <th>최종만료일</th>
                     <th>유형</th>
                     <th>옵션</th>
                     <th>남은횟수/기간</th>
@@ -84,6 +90,31 @@
                 <!-- 고객 데이터가 여기에 표시됩니다 -->
             </tbody>
         </table>
+    </div>
+    <!-- 수정 모달 -->
+    <div id="editModal">
+      <div class="modal-content">
+        <h3>고객 정보 수정</h3>
+        <form id="editForm">
+          <label>이름: <input type="text" id="editName" required></label>
+          <label>전화번호뒷자리: <input type="text" id="editPhone" required maxlength="4"></label>
+          <label>유형: 
+            <select id="editType">
+              <option value="쿠폰">쿠폰</option>
+              <option value="기간">기간</option>
+            </select>
+          </label>
+          <label>옵션: <input type="text" id="editOption"></label>
+          <label>남은횟수/기간: <input type="number" id="editRemain"></label>
+          <label>상태: <input type="text" id="editStatus"></label>
+          <label>기간시작일: <input type="date" id="editStartDate"></label>
+          <div id="expireDateGroup" style="display:none;">
+            <label>최종 만료일: <input type="date" id="editExpireDate"></label>
+          </div>
+          <button type="submit">저장</button>
+          <button type="button" onclick="closeEditModal()">취소</button>
+        </form>
+      </div>
     </div>
     <script>
         const AIRTABLE_API_KEY = 'patTSoOXQOfJ6DOey.18e6b1a1d9db8dc5a91e7e97cdcb94ea5968bfdf8cf6d4bda6b9f484608991fd';
@@ -124,7 +155,7 @@
                 }
             });
             const json = await res.json();
-            return json.records.map(r => r.fields);
+            return json.records;
         }
 
         async function deleteCustomer(name, phone) {
@@ -208,13 +239,15 @@
             const customers = await getCustomersAirtable();
             const tbody = document.getElementById('customerTableBody');
             tbody.innerHTML = '';
-            customers.forEach(c => {
+            customers.forEach(r => {
+                const c = r.fields;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${c['이름'] || ''}</td>
+                    <td><a href="#" onclick="editCustomer('${c['이름']}', '${c['전화번호뒷자리']}')">${c['이름'] || ''}</a></td>
                     <td>${c['전화번호뒷자리'] || ''}</td>
                     <td>${c['등록일'] || ''}</td>
                     <td>${c['기간시작일'] || ''}</td>
+                    <td>${c['최종만료일'] || ''}</td>
                     <td>${c['유형'] || ''}</td>
                     <td>${c['옵션'] || ''}</td>
                     <td>${c['남은횟수/기간'] || ''}</td>
@@ -231,13 +264,15 @@
             const customers = await getCustomersAirtable();
             const tbody = document.getElementById('customerTableBody');
             tbody.innerHTML = '';
-            customers.filter(c => c['이름'] && c['이름'].includes(keyword)).forEach(c => {
+            customers.filter(r => r.fields['이름'] && r.fields['이름'].includes(keyword)).forEach(r => {
+                const c = r.fields;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${c['이름'] || ''}</td>
+                    <td><a href="#" onclick="editCustomer('${c['이름']}', '${c['전화번호뒷자리']}')">${c['이름'] || ''}</a></td>
                     <td>${c['전화번호뒷자리'] || ''}</td>
                     <td>${c['등록일'] || ''}</td>
                     <td>${c['기간시작일'] || ''}</td>
+                    <td>${c['최종만료일'] || ''}</td>
                     <td>${c['유형'] || ''}</td>
                     <td>${c['옵션'] || ''}</td>
                     <td>${c['남은횟수/기간'] || ''}</td>
@@ -249,6 +284,70 @@
             });
         }
 
+        // --- 고객 정보 수정 모달 관련 ---
+        let currentEditRecordId = null;
+        async function editCustomer(name, phone) {
+            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` } });
+            const json = await res.json();
+            const found = json.records.find(r => r.fields['이름'] === name && r.fields['전화번호뒷자리'] === phone);
+            if (!found) {
+                alert('고객을 찾을 수 없습니다.');
+                return;
+            }
+            currentEditRecordId = found.id;
+            document.getElementById('editName').value = found.fields['이름'] || '';
+            document.getElementById('editPhone').value = found.fields['전화번호뒷자리'] || '';
+            document.getElementById('editType').value = found.fields['유형'] || '쿠폰';
+            document.getElementById('editOption').value = found.fields['옵션'] || '';
+            document.getElementById('editRemain').value = found.fields['남은횟수/기간'] || '';
+            document.getElementById('editStatus').value = found.fields['상태'] || '';
+            document.getElementById('editStartDate').value = found.fields['기간시작일'] || '';
+            document.getElementById('editExpireDate').value = found.fields['최종만료일'] || '';
+            document.getElementById('expireDateGroup').style.display = (found.fields['유형'] === '기간') ? '' : 'none';
+            document.getElementById('editModal').style.display = 'flex';
+        }
+        document.getElementById('editType').addEventListener('change', function() {
+            document.getElementById('expireDateGroup').style.display = (this.value === '기간') ? '' : 'none';
+        });
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            currentEditRecordId = null;
+        }
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!currentEditRecordId) return;
+            const fields = {
+                이름: document.getElementById('editName').value,
+                전화번호뒷자리: document.getElementById('editPhone').value,
+                유형: document.getElementById('editType').value,
+                옵션: document.getElementById('editOption').value,
+                '남은횟수/기간': parseInt(document.getElementById('editRemain').value) || 0,
+                상태: document.getElementById('editStatus').value,
+                기간시작일: document.getElementById('editStartDate').value
+            };
+            if (fields.유형 === '기간') {
+                fields['최종만료일'] = document.getElementById('editExpireDate').value;
+            } else {
+                delete fields['최종만료일'];
+            }
+            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}/${currentEditRecordId}`;
+            const res = await fetch(url, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ fields })
+            });
+            if (!res.ok) {
+                const error = await res.json();
+                alert('에러: ' + JSON.stringify(error));
+                return;
+            }
+            closeEditModal();
+            loadCustomers();
+        });
         window.onload = loadCustomers;
     </script>
 </body>
