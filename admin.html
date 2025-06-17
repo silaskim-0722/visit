@@ -56,11 +56,10 @@
                 <option value="6개월">6개월</option>
                 <option value="custom">직접입력</option>
             </select>
-
-<div class="form-group" id="startDateGroup" style="display:none;">
-    <label for="startDate">기간시작일 (기간권 고객만)</label>
-    <input type="date" id="startDate" name="startDate">
-</div>
+            <div class="form-group" id="startDateGroup" style="display:none;">
+                <label for="startDate">기간시작일 (기간권 고객만)</label>
+                <input type="date" id="startDate" name="startDate">
+            </div>
             <input type="number" id="customInput" style="display:none; width:70px;" min="1" placeholder="입력">
             <button class="btn-blue" type="button" onclick="registerCustomer()">고객 등록</button>
             <button class="btn-green" type="button" onclick="loadCustomers()">전체 회원 조회</button>
@@ -72,14 +71,13 @@
                     <th>이름</th>
                     <th>전화번호뒷자리</th>
                     <th>등록일</th>
-<th>기간시작일</th>
+                    <th>기간시작일</th>
                     <th>유형</th>
                     <th>옵션</th>
                     <th>남은횟수/기간</th>
                     <th>최근방문일</th>
                     <th>상태</th>
- <th>삭제</th>
-
+                    <th>삭제</th>
                 </tr>
             </thead>
             <tbody id="customerTableBody">
@@ -93,21 +91,22 @@
         const AIRTABLE_TABLE_NAME = '고객';
 
         const regType = document.getElementById('regType');
-const startDateGroup = document.getElementById('startDateGroup');
+        const startDateGroup = document.getElementById('startDateGroup');
         const couponOption = document.getElementById('couponOption');
         const periodOption = document.getElementById('periodOption');
         const customInput = document.getElementById('customInput');
+
         regType.addEventListener('change', function() {
             if (this.value === '쿠폰') {
                 couponOption.style.display = '';
                 periodOption.style.display = 'none';
                 customInput.style.display = couponOption.value === 'custom' ? '' : 'none';
-startDateGroup.style.display = 'none';
+                startDateGroup.style.display = 'none';
             } else {
                 couponOption.style.display = 'none';
                 periodOption.style.display = '';
                 customInput.style.display = periodOption.value === 'custom' ? '' : 'none';
-startDateGroup.style.display = '';
+                startDateGroup.style.display = '';
             }
         });
         couponOption.addEventListener('change', function() {
@@ -128,32 +127,30 @@ startDateGroup.style.display = '';
             return json.records.map(r => r.fields);
         }
 
-async function deleteCustomer(name, phone) {
-    if (!confirm(`${name} 고객을 정말 삭제하시겠습니까?`)) return;
-    // 1. 고객 전체 데이터(레코드ID 포함) 조회
-    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
-    const res = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
-    });
-    const json = await res.json();
-    const found = json.records.find(r => r.fields['이름'] === name && r.fields['전화번호뒷자리'] === phone);
-    if (!found) {
-        alert('고객을 찾을 수 없습니다.');
-        return;
-    }
-    // 2. 삭제 요청
-    const delUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}/${found.id}`;
-    const delRes = await fetch(delUrl, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
-    });
-    if (!delRes.ok) {
-        alert('삭제에 실패했습니다.');
-        return;
-    }
-    alert('삭제되었습니다.');
-    loadCustomers();
-}
+        async function deleteCustomer(name, phone) {
+            if (!confirm(`${name} 고객을 정말 삭제하시겠습니까?`)) return;
+            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
+            const res = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
+            });
+            const json = await res.json();
+            const found = json.records.find(r => r.fields['이름'] === name && r.fields['전화번호뒷자리'] === phone);
+            if (!found) {
+                alert('고객을 찾을 수 없습니다.');
+                return;
+            }
+            const delUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}/${found.id}`;
+            const delRes = await fetch(delUrl, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
+            });
+            if (!delRes.ok) {
+                alert('삭제에 실패했습니다.');
+                return;
+            }
+            alert('삭제되었습니다.');
+            loadCustomers();
+        }
 
         async function registerCustomer() {
             const name = prompt('고객 이름을 입력하세요');
@@ -171,13 +168,11 @@ async function deleteCustomer(name, phone) {
                 option = periodOption.value === 'custom' ? customInput.value + '개월' : periodOption.value;
                 remain = parseInt(customInput.value) || (periodOption.value === '1개월' ? 1 : periodOption.value === '3개월' ? 3 : 6);
             }
-const startDate = document.getElementById('startDate').value;
-console.log('기간시작일:', startDate);
-
-if (type === '기간' && !startDate) { // ★ 추가
-    alert('기간시작일을 반드시 선택하세요!');
-    return;
-}
+            const startDate = document.getElementById('startDate').value;
+            if (type === '기간' && !startDate) {
+                alert('기간시작일을 반드시 선택하세요!');
+                return;
+            }
             const data = {
                 이름: name,
                 전화번호뒷자리: phone,
@@ -185,9 +180,11 @@ if (type === '기간' && !startDate) { // ★ 추가
                 유형: type,
                 옵션: option,
                 '남은횟수/기간': remain,
-                상태: '정상',
-"기간시작일": startDate
+                상태: '정상'
             };
+            if (type === '기간') {
+                data['기간시작일'] = startDate;
+            }
             const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
             const res = await fetch(url, {
                 method: 'POST',
@@ -217,15 +214,13 @@ if (type === '기간' && !startDate) { // ★ 추가
                     <td>${c['이름'] || ''}</td>
                     <td>${c['전화번호뒷자리'] || ''}</td>
                     <td>${c['등록일'] || ''}</td>
- <td>${c['기간시작일'] || ''}</td>
+                    <td>${c['기간시작일'] || ''}</td>
                     <td>${c['유형'] || ''}</td>
                     <td>${c['옵션'] || ''}</td>
                     <td>${c['남은횟수/기간'] || ''}</td>
                     <td>${c['최근방문일'] || ''}</td>
                     <td>${c['상태'] || ''}</td>
-<td>
-    <button class="action-btn" onclick="deleteCustomer('${c['이름']}', '${c['전화번호뒷자리']}')">삭제</button>
-  </td>
+                    <td><button class="action-btn" onclick="deleteCustomer('${c['이름']}', '${c['전화번호뒷자리']}')">삭제</button></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -242,77 +237,19 @@ if (type === '기간' && !startDate) { // ★ 추가
                     <td>${c['이름'] || ''}</td>
                     <td>${c['전화번호뒷자리'] || ''}</td>
                     <td>${c['등록일'] || ''}</td>
-  <td>${c['기간시작일'] || ''}</td> 
+                    <td>${c['기간시작일'] || ''}</td>
                     <td>${c['유형'] || ''}</td>
                     <td>${c['옵션'] || ''}</td>
                     <td>${c['남은횟수/기간'] || ''}</td>
                     <td>${c['최근방문일'] || ''}</td>
                     <td>${c['상태'] || ''}</td>
-<td><button class="action-btn" onclick="deleteCustomer('${c['이름']}', '${c['전화번호뒷자리']}')">삭제</button></td>
+                    <td><button class="action-btn" onclick="deleteCustomer('${c['이름']}', '${c['전화번호뒷자리']}')">삭제</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-document.getElementById('attendanceForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const name = document.getElementById('name').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-
-    // 1. 고객 전체 데이터(레코드ID 포함) 조회
-    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
-    const res = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${AIRTABLE_API_KEY}` }
-    });
-    const json = await res.json();
-    const records = json.records;
-
-    // 2. 입력값과 일치하는 고객 찾기
-    const found = records.find(r => r.fields['이름'] === name && r.fields['전화번호뒷자리'] === phone);
-
-    if (found) {
-        // 3. 남은횟수/기간 차감, 최근방문일 업데이트
-        const remain = found.fields['남은횟수/기간'] || 0;
-        const today = new Date().toISOString().slice(0,10);
-        const patchUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}/${found.id}`;
-        const patchRes = await fetch(patchUrl, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                fields: {
-                    '남은횟수/기간': remain > 0 ? remain - 1 : 0,
-                    '최근방문일': today
-                }
-            })
-        });
-        if (!patchRes.ok) {
-            const error = await patchRes.json();
-            alert('에러: ' + JSON.stringify(error));
-            return;
-        }
-        document.getElementById('successMessage').style.display = 'block';
-        document.getElementById('failMessage').style.display = 'none';
-        this.reset();
-        setTimeout(() => {
-            document.getElementById('successMessage').style.display = 'none';
-        }, 3000);
-    } else {
-        document.getElementById('failMessage').style.display = 'block';
-        document.getElementById('successMessage').style.display = 'none';
-        setTimeout(() => {
-            document.getElementById('failMessage').style.display = 'none';
-        }, 3000);
-    }
-});
-
         window.onload = loadCustomers;
-   
-
- </script>
-
-
+    </script>
 </body>
 </html>
