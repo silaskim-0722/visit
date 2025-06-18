@@ -241,6 +241,7 @@
             tbody.innerHTML = '';
             customers.forEach(r => {
                 const c = r.fields;
+if (!c['이름'] || !c['전화번호뒷자리']) return;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><a href="#" onclick="editCustomer('${c['이름']}', '${c['전화번호뒷자리']}')">${c['이름'] || ''}</a></td>
