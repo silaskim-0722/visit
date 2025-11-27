@@ -1,158 +1,243 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>허그핏스타점핑 - 출석체크</title>
+
     <style>
-        body { font-family: 'Noto Sans KR', sans-serif; background: #f5f5f5; color: #333; }
-        .container { max-width: 400px; margin: 40px auto; padding: 24px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);}
-        .header { text-align: center; margin-bottom: 24px; }
-        .header img { width: 140px; margin-bottom: 18px; }
-        .header h2 { color: #2e7d32; font-size: 20px; }
-        .form-group { margin-bottom: 18px; }
-        label { display: block; margin-bottom: 6px; font-weight: 500; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
-        button { width: 100%; padding: 14px; background: #4CAF50; color: #fff; border: none; border-radius: 6px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 10px; }
-        .success-message { display: none; text-align: center; margin-top: 40px; font-size: 1.3em; color: #2e7d32; font-weight: 600; }
-        .fail-message { display: none; text-align: center; margin-top: 18px; padding: 10px; border-radius: 5px; color: #d32f2f; background-color: #ffebee; }
-        .kakao-btn { margin-top: 20px; display: block; width: 100%; background: #fee500; color: #3c1e1e; border: none; border-radius: 6px; font-size: 16px; padding: 12px; text-align: center; text-decoration: none; }
-        #retryBtn { display: none; margin: 30px auto 0 auto; width: 100%; background: #1976d2; color: #fff; border: none; border-radius: 6px; font-size: 16px; padding: 12px; cursor: pointer; }
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 420px;
+            margin: 40px auto;
+            padding: 24px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .header img {
+            width: 150px;
+            margin-bottom: 16px;
+        }
+        .header h2 {
+            color: #2e7d32;
+            font-size: 20px;
+            margin-top: 5px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            margin-top: 14px;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            background: #4CAF50;
+            color: #fff;
+            font-size: 17px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .success-message {
+            display: none;
+            margin-top: 40px;
+            text-align: center;
+            font-size: 1.3em;
+            color: #2e7d32;
+            font-weight: 700;
+        }
+        .fail-message {
+            display: none;
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 6px;
+            background: #ffebee;
+            color: #d32f2f;
+            text-align: center;
+        }
+        .kakao-btn {
+            width: 100%;
+            margin-top: 22px;
+            padding: 13px;
+            display: block;
+            background: #fee500;
+            color: #000;
+            text-align: center;
+            border-radius: 6px;
+            font-size: 16px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        #retryBtn {
+            display: none;
+            margin-top: 28px;
+            background: #1976d2;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
-            <img src="logo.png" alt="허그핏 로고">
+            <img src="https://raw.githubusercontent.com/silaskim-0722/hugfitmember-in/0cbe487104764f87d7939df2399a35f9672383c1/hugfit-logo.png" />
             <h2>허그핏 출석 체크</h2>
         </div>
+
         <form id="attendanceForm">
-            <div class="form-group">
-                <label for="name">이름</label>
-                <input type="text" id="name" name="name" required placeholder="예: 김민정">
-            </div>
-            <div class="form-group">
-                <label for="phone">전화번호 뒷자리</label>
-                <input type="tel" id="phone" name="phone" required placeholder="전화번호 뒷자리 4자리" pattern="[0-9]{4}" maxlength="4" inputmode="numeric">
-            </div>
-            <div id="today" style="text-align:center; color:#666; font-size:15px; margin-bottom:18px;">오늘 날짜: </div>
+            <label>이름</label>
+            <input type="text" id="name" placeholder="예: 김민정" required />
+
+            <label>전화번호 뒷자리</label>
+            <input type="tel" id="phone" maxlength="4" pattern="[0-9]{4}" placeholder="예: 1234" required />
+
+            <div id="today" style="text-align:center; margin-top:15px; color:#666;"></div>
+
             <button type="submit">출석완료</button>
         </form>
+
         <div id="successMessage" class="success-message"></div>
         <div id="failMessage" class="fail-message">등록된 고객이 아닙니다. 관리자에게 문의하세요.</div>
-        <button id="retryBtn">다시 출석체크</button>
+
+        <button id="retryBtn">다시 출석하기</button>
+
         <a class="kakao-btn" href="https://open.kakao.com/me/fitcouple" target="_blank">카카오톡 문의하기</a>
+    </div>
 
-    <script>
-        const AIRTABLE_API_KEY = 'patTSoOXQOfJ6DOey.18e6b1a1d9db8dc5a91e7e97cdcb94ea5968bfdf8cf6d4bda6b9f484608991fd';
-        const AIRTABLE_BASE_ID = 'appfWwXzA5OfPaeHI';
-        const AIRTABLE_TABLE_NAME = '고객';
+<script>
+    // Airtable 설정
+    const AIRTABLE_API_KEY = "YOUR_API_KEY";
+    const AIRTABLE_BASE_ID = "YOUR_BASE_ID";
+    const TABLE = "고객";
 
-        // 오늘 날짜 표시
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        document.getElementById('today').textContent = `오늘 날짜: ${yyyy}-${mm}-${dd}`;
+    // 오늘 날짜 표시
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    document.getElementById("today").textContent = "오늘 날짜: " + todayStr;
 
-        // 고객 목록 가져오기 (id 포함)
-        async function getCustomersAirtable() {
-            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
-            const res = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${AIRTABLE_API_KEY}`
-                }
-            });
-            const json = await res.json();
-            return json.records.map(r => ({ id: r.id, ...r.fields }));
-        }
+    // Airtable에서 고객 목록 가져오기
+    async function getCustomers() {
+        const res = await fetch(
+            `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(TABLE)}`,
+            { headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` } }
+        );
+        const json = await res.json();
+        return json.records.map(r => ({ id: r.id, ...r.fields }));
+    }
 
-        // 출석체크(쿠폰 차감 및 최근방문일 업데이트)
-        async function updateAttendance(recordId, newCount, todayStr) {
-            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_NAME}/${recordId}`;
-            const data = {
-                fields: {
-                    "남은횟수/기간": newCount,
-                    "최근방문일": todayStr
-                }
-            };
-            const response = await fetch(url, {
+    // Airtable 값 업데이트
+    async function updateRecord(id, fields) {
+        await fetch(
+            `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${TABLE}/${id}`,
+            {
                 method: "PATCH",
                 headers: {
-                    "Authorization": `Bearer ${AIRTABLE_API_KEY}`,
-                    "Content-Type": "application/json"
+                    Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify(data)
-            });
-            return response.json();
-        }
-
-        function getMonthsFromOption(option) {
-            if (!option) return 1;
-            const match = option.match(/(\d+)/);
-            return match ? parseInt(match[1], 10) : 1;
-        }
-
-        document.getElementById('attendanceForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const name = document.getElementById('name').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const customers = await getCustomersAirtable();
-            const found = customers.find(c => c['이름'] === name && c['전화번호뒷자리'] === phone);
-
-            const successMessage = document.getElementById('successMessage');
-            const failMessage = document.getElementById('failMessage');
-
-            successMessage.style.display = 'none';
-            failMessage.style.display = 'none';
-
-            if (found) {
-                const todayStr = new Date().toISOString().slice(0, 10);
-                let message = `${name} 님의 ${todayStr} 출석이 완료되었습니다.`;
-
-                if (found['유형'] === '쿠폰') {
-                    const remain = found['남은횟수/기간'] || 0;
-                    if (remain > 0) {
-                        await updateAttendance(found.id, remain - 1, todayStr);
-                        message += `<br>남은 쿠폰: <b>${remain - 1}</b>회`;
-                    } else {
-                        message += `<br>쿠폰이 모두 소진되었습니다. 관리자에게 문의하세요.`;
-                    }
-                } else if (found['유형'] === '기간') {
-                    const startDateStr = found['기간시작일'];
-                    const option = found['옵션'];
-                    if (startDateStr && option) {
-                        const months = getMonthsFromOption(option);
-                        const startDate = new Date(startDateStr);
-                        const expireDate = new Date(startDate);
-                        expireDate.setMonth(expireDate.getMonth() + months);
-                        const expireStr = expireDate.toISOString().slice(0, 10);
-                        await updateAttendance(found.id, 0, todayStr);
-                        message += `<br>만료일: <b>${expireStr}</b>`;
-                    } else {
-                        message += `<br>기간권 정보가 올바르지 않습니다. 관리자에게 문의하세요.`;
-                    }
-                }
-
-                document.getElementById('attendanceForm').style.display = 'none';
-                successMessage.innerHTML = message;
-                successMessage.style.display = 'block';
-                document.getElementById('retryBtn').style.display = 'block';
-            } else {
-                failMessage.style.display = 'block';
-                setTimeout(() => {
-                    failMessage.style.display = 'none';
-                }, 3000);
+                body: JSON.stringify({ fields }),
             }
-        });
+        );
+    }
 
-        document.getElementById('retryBtn').addEventListener('click', function() {
-            document.getElementById('attendanceForm').style.display = 'block';
-            document.getElementById('successMessage').style.display = 'none';
-            document.getElementById('retryBtn').style.display = 'none';
-            document.getElementById('attendanceForm').reset();
-        });
-    </script>
+    // 당일 출석 여부 확인
+    function isSameDay(dateStr) {
+        return dateStr === todayStr;
+    }
+
+    document.getElementById("attendanceForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const name = document.getElementById("name").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+
+        const customers = await getCustomers();
+        const user = customers.find(c => c["이름"] === name && c["전화번호뒷자리"] === phone);
+
+        const success = document.getElementById("successMessage");
+        const fail = document.getElementById("failMessage");
+
+        success.style.display = "none";
+        fail.style.display = "none";
+
+        if (!user) {
+            fail.style.display = "block";
+            return;
+        }
+
+        // 🔥 중복 출석 방지 (오늘 이미 출석한 경우)
+        if (isSameDay(user["최근방문일"])) {
+            document.getElementById("attendanceForm").style.display = "none";
+            success.innerHTML = `${name} 님은 이미 오늘 출석하셨습니다.<br><br>(${todayStr})`;
+            success.style.display = "block";
+            document.getElementById("retryBtn").style.display = "block";
+            return;
+        }
+
+        // 출석 처리
+        let msg = `${name} 님의 ${todayStr} 출석이 완료되었습니다.<br>`;
+
+        if (user["유형"] === "쿠폰") {
+            let remain = user["남은횟수/기간"] || 0;
+
+            if (remain > 0) remain -= 1;
+
+            await updateRecord(user.id, {
+                "남은횟수/기간": remain,
+                "최근방문일": todayStr
+            });
+
+            msg += `<br>남은 쿠폰: <b>${remain}</b>회`;
+
+        } else if (user["유형"] === "기간") {
+            let start = new Date(user["기간시작일"]);
+            let option = user["옵션"];   // 예: "1개월", "3개월"
+
+            const months = parseInt(option) || 1;
+            let expireDate = new Date(start);
+            expireDate.setMonth(expireDate.getMonth() + months);
+
+            const expY = expireDate.getFullYear();
+            const expM = String(expireDate.getMonth() + 1).padStart(2, "0");
+            const expD = String(expireDate.getDate()).padStart(2, "0");
+
+            await updateRecord(user.id, { "최근방문일": todayStr });
+
+            msg += `<br>만료일: <b>${expY}-${expM}-${expD}</b>`;
+        }
+
+        document.getElementById("attendanceForm").style.display = "none";
+        success.innerHTML = msg;
+        success.style.display = "block";
+        document.getElementById("retryBtn").style.display = "block";
+    });
+
+    document.getElementById("retryBtn").addEventListener("click", function () {
+        document.getElementById("attendanceForm").reset();
+        document.getElementById("attendanceForm").style.display = "block";
+        document.getElementById("successMessage").style.display = "none";
+        document.getElementById("retryBtn").style.display = "none";
+    });
+</script>
 </body>
 </html>
-    </div>
